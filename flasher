@@ -3,6 +3,7 @@
 # Variables
 DB=database.sqlite
 SQL="sqlite3 $DB"
+COLUMNS=${COLUMNS:-80}  # If not already set, set it to 80.
 # End Variables
 
 if [[ ! -f $DB ]]; then
@@ -74,13 +75,25 @@ random_question() {
 while true; do
   QUES="$(random_question)"
   ANS="$( get_answer "$QUES" )"
+  QINDENT=$(( ( $COLUMNS - ${#QUES} ) / 2 ))
+  AINDENT=$(( ( $COLUMNS - ${#ANS}  ) / 2 ))
   clear
-  echo "$QUES"
+  echo
+  # Make it centered and reverse video
+  for var in {1..$QINDENT}; do
+    echo -n ' '
+  done
+  echo -e "\033[7m$QUES\033[0m"  
   echo
   echo Press Enter \(or Ctrl-c to quit\)
   read
   clear
-  echo "$ANS"
+  echo
+  # Make it centered and reverse video
+  for var in {1..$AINDENT}; do
+    echo -n ' '
+  done
+  echo -e "\033[7m$ANS\033[0m"
   echo
   echo How confident did you feel out of 1 2 3 4 5
   echo 1 meaning you didn\'t know the answer
