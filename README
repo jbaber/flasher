@@ -1,0 +1,9 @@
+flasher is a CLI spaced repetition flashcard program.
+
+Right now, flasher is a loosely held together couple of ksh shell scripts which make calls to sqlite3.
+
+pegs is a sample question and answer file of pegs for the major system memory method.
+
+cf:
+http://en.wikipedia.org/wiki/Spaced_repetition
+http://en.wikipedia.org/wiki/Mnemonic_major_system

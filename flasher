@@ -1,0 +1,100 @@
+#!/bin/ksh
+
+# Variables
+DB=database.sqlite
+SQL="sqlite3 $DB"
+# End Variables
+
+if [[ ! -f $DB ]]; then
+  echo "Set up an initial bunch of questions and answers in a plain text with lines"
+  echo "like"
+  echo "question<tab>answer"
+  echo "then run"
+  echo "./initialize_database QUESTIONFILE"
+  exit 1
+fi
+
+# Functions
+
+get_answer() {
+  # Return answer corresponding to $1
+  echo 'SELECT answer FROM qandas WHERE question="'$1'" LIMIT 1;' |$SQL
+}
+
+set_rank() {
+  # Set rank of $1 to $2
+  case "$2" in 1|2|3|4|5)
+    echo 'UPDATE qandas SET rank="'$2'" WHERE question="'$1'";' |$SQL
+  esac
+}
+
+available_ranks() {
+  echo 'SELECT DISTINCT rank FROM qandas;' |$SQL
+}
+
+pick_a_rank() {
+  # If the ranks available are 4,3,1
+  # Make the likelihoods 1/7, 2/7, 4/7  (powers of 2 are arbitrary, I'm sure
+  # the real supermemo algorithm chooses more smartly
+  # Choose a random number from 1 to 7 and see
+  # which of 1 23 4567 it's in by checking
+  # if it's >=2^2
+  # if not, then >=2^1
+  # if not, then >=2^0
+  RANKS="$(available_ranks |sort --numeric-sort --reverse )"
+  NUMRANKS="$(echo "$RANKS" |wc -l)"
+  denominator=0
+  counter=0
+  for var in $RANKS; do
+    denominator=$( echo "$denominator + 2^$counter" |bc )
+    counter=$(( $counter + 1 ))
+  done
+  RANDY=$(( $RANDOM % $denominator + 1 ))
+  for RANK in $( seq 0 $(( $NUMRANKS - 1 )) ); do
+    if [[ $RANDY -ge $( echo 2^$RANK |bc ) ]]; then
+      WINNER=$(( $RANK + 1 ))
+    fi
+  done
+  echo "$RANKS" |sed -n "$WINNER"p
+}
+
+random_question_of_rank() {
+  # Select a random entry from the database of rank $1
+  echo 'SELECT question FROM qandas WHERE rank='$1' ORDER BY RANDOM() LIMIT 1;' |$SQL
+}
+
+random_question() {
+  random_question_of_rank $(pick_a_rank)
+}
+
+# End functions
+
+# BODY
+
+while true; do
+  QUES="$(random_question)"
+  ANS="$( get_answer "$QUES" )"
+  clear
+  echo "$QUES"
+  echo
+  echo Press Enter \(or Ctrl-c to quit\)
+  read
+  clear
+  echo "$ANS"
+  echo
+  echo How confident did you feel out of 1 2 3 4 5
+  echo 1 meaning you didn\'t know the answer
+  echo 5 meaning you knew it instantly
+  echo Typing anything else \(or nothing\) counts as saying \'1\'
+  read NEWRANK
+  case "$NEWRANK" in
+    1|2|3|4|5)
+      set_rank "$QUES" "$NEWRANK"
+    ;;
+    *)
+      set_rank "$QUES" "1"
+    ;;
+  esac
+done
+
+# END BODY

@@ -1,0 +1,21 @@
+#!/bin/ksh
+
+if [[ $# -lt 1 ]]; then
+  echo Usage $(basename $0) FILENAME where FILENAME is a tab delimited file like
+  echo 'First prime?<tab>2'
+  echo 'What did the lion lack?<tab>courage'
+  echo ...
+  echo not containing any \"s, \'s, spurious \<tab\>\'s or other weird characters.
+  echo Outputs database.sqlite
+  exit 1
+fi
+
+# Variables
+FILENAME="$1"
+DB="database.sqlite"
+SQL="sqlite3 $DB"
+# End Variables
+
+COMMAND="CREATE TABLE IF NOT EXISTS qandas( ordinal INTEGER PRIMARY KEY, question TEXT, answer TEXT, rank INTEGER);"
+echo $COMMAND | $SQL
+awk '{print "INSERT INTO qandas (question,answer,rank) VALUES (\047"$1"\047,\047"$2"\047,1);"}' $FILENAME |$SQL
