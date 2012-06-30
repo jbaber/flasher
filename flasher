@@ -1,7 +1,11 @@
 #!/bin/ksh
 
 # Variables
-DB=database.sqlite
+if [[ $# -eq 0 ]]; then
+  DB=database.sqlite
+else
+  DB="$1"
+fi
 SQL="sqlite3 $DB"
 COLUMNS=${COLUMNS:-80}  # If not already set, set it to 80.
 # End Variables
@@ -12,6 +16,8 @@ if [[ ! -f $DB ]]; then
   echo "question<tab>answer"
   echo "then run"
   echo "./initialize_database QUESTIONFILE"
+  echo "then run"
+  echo "$(basename $0) QUESTIONFILE.sqlite"
   exit 1
 fi
 

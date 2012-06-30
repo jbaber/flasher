@@ -1,10 +1,16 @@
 #!/bin/ksh
 
 # Variables
-DB="database.sqlite"
-SQL="sqlite3 $DB"
+if [[ $# -eq 0 ]]; then
+  DB="database.sqlite"
+else
+  DB="$1"
+fi
+SQL="sqlite3 "$DB
 # End Variables
 
-COMMAND="SELECT question,answer,rank FROM qandas;"
-# That's a <tab> character, so don't just copy-paste this code.
-echo $COMMAND | $SQL |sed 's/|/	/g'
+if [[ -f $DB ]]; then
+  COMMAND="SELECT question,answer,rank FROM qandas;"
+  # That's a <tab> character, so don't just copy-paste this code.
+  echo $COMMAND | $SQL |sed 's/|/	/g'
+fi
