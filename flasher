@@ -23,6 +23,12 @@ fi
 
 # Functions
 
+leave() {
+  stty echo # If this doesn't get called, the user won't be able to see what she types
+            # anymore!
+  exit 0
+}
+
 get_answer() {
   # Return answer corresponding to $1
   echo 'SELECT answer FROM qandas WHERE question="'$1'" LIMIT 1;' |$SQL
@@ -78,6 +84,12 @@ random_question() {
 
 # BODY
 
+# Make ctrl-c work as usual
+trap leave INT
+
+# Don't echo characters back (since they're just 'q' or carriage-return or the 'any' key
+stty -echo
+
 while true; do
   QUES="$(random_question)"
   ANS="$( get_answer "$QUES" )"
@@ -91,8 +103,12 @@ while true; do
   done
   echo -e "\033[7m$QUES\033[0m"  
   echo
-  echo Press Enter \(or Ctrl-c to quit\)
-  read
+  echo Press any key to continue \(or 'q' to quit\)
+  typeset -l ONECHAR  # Make it ignore case
+  read -N 1 ONECHAR   # Read exactly one character
+  if [[ $ONECHAR = 'q' ]]; then
+    leave
+  fi
   clear
   echo
   # Make it centered and reverse video
@@ -105,10 +121,15 @@ while true; do
   echo 1 meaning you didn\'t know the answer
   echo 5 meaning you knew it instantly
   echo Typing anything else \(or nothing\) counts as saying \'1\'
-  read NEWRANK
+  echo \'q\' to quit
+  typeset -l NEWRANK  # Make it ignore case
+  read -N 1 NEWRANK
   case "$NEWRANK" in
     1|2|3|4|5)
       set_rank "$QUES" "$NEWRANK"
+    ;;
+    q)
+      leave
     ;;
     *)
       set_rank "$QUES" "1"
