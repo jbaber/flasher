@@ -1,0 +1,10 @@
+#!/bin/ksh
+
+# Variables
+DB="database.sqlite"
+SQL="sqlite3 $DB"
+# End Variables
+
+COMMAND="SELECT question,answer,rank FROM qandas;"
+# That's a <tab> character, so don't just copy-paste this code.
+echo $COMMAND | $SQL |sed 's/|/	/g'
